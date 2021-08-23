@@ -1,3 +1,3 @@
-module github.com/eleme/anubis-openapi-third
+module github.com/janker0718/kernel-go
 
 go 1.14
