@@ -1,4 +1,4 @@
-package kernel
+package client
 
 
 const code = "code"

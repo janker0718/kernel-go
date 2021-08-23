@@ -1,4 +1,4 @@
-package kernel
+package client
 
 import (
 	"encoding/json"
