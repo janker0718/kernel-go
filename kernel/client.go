@@ -1,4 +1,4 @@
-package client
+package kernel
 
 import (
 	"crypto/sha256"
