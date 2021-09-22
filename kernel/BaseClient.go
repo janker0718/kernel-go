@@ -1,6 +1,8 @@
 package kernel
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -16,10 +18,9 @@ import (
 获取时间戳，格式yyyy-MM-dd HH:mm:ss
 */
 
-var this Client
+var this Config
 
-
-func InitClient(config Client) {
+func InitClient(config Config) {
 	this = config
 }
 
@@ -33,9 +34,8 @@ func ReadAsJson(response io.Reader) (map[string]string, error) {
 	}
 	m := make(map[string]string)
 	err = json.Unmarshal(byt, &m)
-	return m,err
+	return m, err
 }
-
 
 func GetConfig(key string) string {
 	if key == "protocol" {
@@ -50,7 +50,7 @@ func GetConfig(key string) string {
 		return this.SecretKey
 	} else if key == "accessToken" {
 		return this.AccessToken
-	}else {
+	} else {
 		panic(key + " is illegal")
 	}
 }
@@ -93,55 +93,59 @@ func ToRespModel(resp map[string]string) map[string]interface{} {
 			}
 		}
 	}
-	panic("接口访问异常，code:" +code+",msg:" + msg)
+	panic("接口访问异常，code:" + code + ",msg:" + msg)
 
 }
 
 func toJSONString(params map[string]interface{}) string {
-	mjson,_ :=json.Marshal(params)
-	mString :=string(mjson)
+	mjson, _ := json.Marshal(params)
+	mString := string(mjson)
 	return mString
 }
 
-func ObjToJSONString(model interface{}) string{
+func ObjToJSONString(model interface{}) string {
 	marshal, err := json.Marshal(model)
 	if err != nil {
 		return ""
 	}
-	mString :=string(marshal)
+	mString := string(marshal)
 	return mString
 }
 
 func sortMap(params map[string]string) map[string]string {
-	return params;
+	return params
 }
 
-
-func Sign(systemParams map[string]string, bizParams map[string]string, textParams map[string]string,secretKey string) string {
+func Sign(systemParams map[string]string, bizParams map[string]string, textParams map[string]string, secretKey string) string {
 	sortedMap := GetSortedMap(systemParams, bizParams, textParams)
 	//var content = "";
-	var index = 0;
-	var _content string;
+	var index = 0
+	var _content string
 	for key, value := range sortedMap {
-		if len(key)>0 && len(value) > 0{
-			var temp = "&";
-			if index == 0{
-				temp = "";
-			}else {
-				temp = "&";
+		if len(key) > 0 && len(value) > 0 {
+			var temp = "&"
+			if index == 0 {
+				temp = ""
+			} else {
+				temp = "&"
 			}
 			_content = _content + temp + key + "=" + value
-			index++;
+			index++
 		}
 	}
 	newStr := secretKey + _content
 	return Sha256(newStr)
 }
 
+func Sha256(message string) string {
+	bytes2 := sha256.Sum256([]byte(message))   //计算哈希值，返回一个长度为32的数组
+	hashcode2 := hex.EncodeToString(bytes2[:]) //将数组转换成切片，转换成16进制，返回字符串
+	return hashcode2
+}
 func GetSortedMap(systemParams map[string]string, bizParams map[string]string, textParams map[string]string) map[string]string {
 	sortedMap := MergeMap(systemParams, bizParams, textParams)
 	newMap := map[string]string{}
-	EachMap(sortedMap, func(key string, value string){
+	EachMap(sortedMap, func(key string, value string) {
 		newMap[key] = value
 	})
 	return newMap
@@ -151,7 +155,7 @@ func GetSortedMap(systemParams map[string]string, bizParams map[string]string, t
 // eachMap      ->  待遍历的map
 // eachFunc     ->  map遍历接收，入参应该符合map的key和value
 // 需要对传入类型进行检查，不符合则直接panic提醒进行代码调整
-func EachMap(eachMap interface{}, eachFunc interface{})  {
+func EachMap(eachMap interface{}, eachFunc interface{}) {
 	eachMapValue := reflect.ValueOf(eachMap)
 	eachFuncValue := reflect.ValueOf(eachFunc)
 	eachMapType := eachMapValue.Type()
@@ -237,13 +241,11 @@ func buildQueryString(sortedMap map[string]string) string {
 	return requestUrl
 }
 
-
-
-type Client struct {
-	Protocol           string
-	GatewayHost        string
-	AppId              string
-	MerchantId         string
-	SecretKey    	   string
-	AccessToken 	   string
+type Config struct {
+	Protocol    string
+	GatewayHost string
+	AppId       string
+	MerchantId  string
+	SecretKey   string
+	AccessToken string
 }
